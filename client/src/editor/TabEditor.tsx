@@ -8,6 +8,9 @@ const TabEditor = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [color, setColor] = useState("#FFFFFF");
+    const [brushSize, setBrushSize] = useState(4);
+    const [isEraser, setIsEraser] = useState(false);
+    const [showColorPalette, setShowColorPalette] = useState(false);
     const [result, setResult] = useState<GeneratedResult>();
     const [dictOfVars, setDictofVars] = useState({});
     const [latexExpression, setLatexExpression] = useState<Array<string>>([]);
@@ -27,7 +30,7 @@ const TabEditor = () => {
                 
                 ctx.lineCap = "round";
                 ctx.lineJoin = "round";
-                ctx.lineWidth = 4;
+                ctx.lineWidth = brushSize;
                 ctx.fillStyle = "#000000";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
@@ -140,7 +143,6 @@ const TabEditor = () => {
     };
 
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-        e.preventDefault();
         const canvas = canvasRef.current;
         if (canvas) {
             const ctx = canvas.getContext("2d");
@@ -148,6 +150,7 @@ const TabEditor = () => {
                 const pos = getEventPosition(e);
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
+                ctx.lineWidth = brushSize;
                 setIsDrawing(true);
             }
         }
@@ -159,14 +162,19 @@ const TabEditor = () => {
 
     const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (!isDrawing) return;
-        e.preventDefault();
-
-        const canvas = canvasRef.current;
+        const canvas = canvasRef.current
         if (canvas) {
             const ctx = canvas.getContext("2d");
             if (ctx) {
                 const pos = getEventPosition(e);
-                ctx.strokeStyle = color;
+                if (isEraser) {
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = color;
+                }
+                ctx.lineWidth = brushSize;
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             }
@@ -259,46 +267,107 @@ const TabEditor = () => {
         <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
             {/* Mobile Control Panel */}
             <div className="absolute top-2 left-2 right-2 z-10 bg-gray-800 bg-opacity-95 backdrop-blur-sm p-3 rounded-xl shadow-2xl md:top-6 md:left-6 md:right-auto md:max-w-xs md:p-6">
-                {/* Color Palette */}
-                <div className="mb-4 md:mb-6">
-                    <h3 className="text-white text-xs md:text-sm font-semibold mb-2 md:mb-3 tracking-wide">
-                        COLORS
+                
+                {/* Tool Selection */}
+                <div className="mb-4">
+                    <h3 className="text-white text-xs md:text-sm font-semibold mb-2 tracking-wide">
+                        TOOLS
                     </h3>
-                    <div className="grid grid-cols-8 md:grid-cols-5 gap-2 md:gap-3">
-                        {colors.map((c, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setColor(c)}
-                                className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 ${
-                                    color === c
-                                        ? "border-white shadow-lg scale-110 ring-2 ring-white ring-offset-2 ring-offset-gray-800"
-                                        : "border-gray-500 hover:border-gray-300"
-                                }`}
-                                style={{ backgroundColor: c }}
-                                aria-label={`Select color ${c}`}
-                            />
-                        ))}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsEraser(false)}
+                            className={`flex-1 py-2 px-3 rounded-lg transition-all duration-200 font-medium text-sm ${
+                                !isEraser
+                                    ? "bg-blue-600 text-white shadow-lg"
+                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            }`}
+                        >
+                            ✏️ Brush
+                        </button>
+                        <button
+                            onClick={() => setIsEraser(true)}
+                            className={`flex-1 py-2 px-3 rounded-lg transition-all duration-200 font-medium text-sm ${
+                                isEraser
+                                    ? "bg-red-600 text-white shadow-lg"
+                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            }`}
+                        >
+                            🧹 Eraser
+                        </button>
                     </div>
                 </div>
 
-                {/* Current Color Preview - Hidden on mobile to save space */}
-                <div className="hidden md:block mb-6">
-                    <h3 className="text-white text-sm font-semibold mb-3 tracking-wide">
-                        CURRENT
+                {/* Brush Size */}
+                <div className="mb-4">
+                    <h3 className="text-white text-xs md:text-sm font-semibold mb-2 tracking-wide">
+                        BRUSH SIZE
                     </h3>
-                    <div className="flex items-center gap-3 bg-gray-700 bg-opacity-50 p-3 rounded-lg">
-                        <div
-                            className="w-12 h-12 rounded-lg border-2 border-gray-500 shadow-inner"
-                            style={{ backgroundColor: color }}
+                    <div className="space-y-2">
+                        <input
+                            type="range"
+                            min="1"
+                            max="20"
+                            value={brushSize}
+                            onChange={(e) => setBrushSize(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                         />
-                        <div>
-                            <div className="text-gray-300 text-xs uppercase tracking-wider">
-                                Color
-                            </div>
-                            <div className="text-white text-sm font-mono">{color}</div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-xs">Size: {brushSize}px</span>
+                            <div
+                                className="rounded-full bg-white"
+                                style={{
+                                    width: `${Math.max(8, Math.min(24, brushSize * 2))}px`,
+                                    height: `${Math.max(8, Math.min(24, brushSize * 2))}px`
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
+
+                {/* Color Palette Toggle */}
+                {!isEraser && (
+                    <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-white text-xs md:text-sm font-semibold tracking-wide">
+                                COLOR
+                            </h3>
+                            <button
+                                onClick={() => setShowColorPalette(!showColorPalette)}
+                                className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+                            >
+                                {showColorPalette ? "Hide" : "Show"}
+                            </button>
+                        </div>
+                        
+                        {/* Current Color Preview */}
+                        <div className="flex items-center gap-2 mb-2">
+                            <div
+                                className="w-8 h-8 md:w-10 md:h-10 rounded-lg border-2 border-gray-500 shadow-inner"
+                                style={{ backgroundColor: color }}
+                            />
+                            <div className="text-gray-300 text-xs font-mono">{color}</div>
+                        </div>
+
+                        {/* Color Palette */}
+                        {showColorPalette && (
+                            <div className="grid grid-cols-8 md:grid-cols-5 gap-2 md:gap-3 mt-2">
+                                {colors.map((c, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setColor(c)}
+                                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                                            color === c
+                                                ? "border-white shadow-lg scale-110 ring-2 ring-white ring-offset-2 ring-offset-gray-800"
+                                                : "border-gray-500 hover:border-gray-300"
+                                        }`}
+                                        style={{ backgroundColor: c }}
+                                        aria-label={`Select color ${c}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 md:flex-col md:gap-0 md:space-y-3">
