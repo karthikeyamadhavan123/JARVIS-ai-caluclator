@@ -146,5 +146,5 @@ def analyze_image(img: Image, dict_of_vars: dict):
         else:
             answer["assign"] = False
 
-    print("RETURNED ANSWER:", answers)
+    # print("RETURNED ANSWER:", answers)
     return answers
