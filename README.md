@@ -123,9 +123,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### 4. Access the Application
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+- **Frontend**: https://jarvis-ai-caluclator.vercel.app/
+- **Backend API**: http://localhost:8900,
 
 ## 📦 Installation Guide
 
