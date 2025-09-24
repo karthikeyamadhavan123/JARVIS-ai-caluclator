@@ -66,7 +66,7 @@ An intelligent drawing and calculation application that combines freehand drawin
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/ai-tab-editor.git
+git clone https://github.com/karthikeyamadhavan123/JARVIS-ai-caluclator.git
 cd ai-tab-editor
 ```
 
@@ -162,15 +162,15 @@ pip install typing-extensions
 #### Frontend (.env)
 
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8900,
 ```
 
 #### Backend (.env)
 
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-PORT=8000
+ALLOWED_ORIGINS=http://localhost:5173,https://jarvis-ai-caluclator.vercel.app/
+PORT=8900
 ```
 
 ### API Configuration
